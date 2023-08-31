@@ -1,0 +1,192 @@
+---
+title: "Data Science for Bioinformatics - Week 01"
+output: 
+  html_document:
+    code_folding: show
+    toc: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+# Learning goals for this exercise
+ 
+ * Learn how to install and load packages
+ * Get a basic introduction to Rstudio (TA)
+ * Knit a Rmarkdown document (this document)
+ * Look at data from online resources
+ * Plot some simple plots
+
+# How to install packages
+
+You should try and install the package "fivethirtyeight" & "tidyverse"
+
+You can do this by running the code:
+
+```{r}
+install.packages("fivethirtyeight")
+install.packages("tidyverse")
+```
+
+or use the menu "Tools > Install packages"
+
+# How to load packages
+
+When you want to load the packages, you do:
+
+```{r}
+library(fivethirtyeight)
+library(tidyverse)
+```
+
+# R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. 
+
+## Knitting
+
+### Q1.1: Try and knit this this document now!
+
+Press the "knit button" or press ctrl+shift+k
+
+IT WILL PROBABLY FAIL! But when you are done installing packages etc. - it should work ;)
+
+## A little more on R markdown
+
+You can embed an R code chunk like this:
+
+```{r}
+summary(cars)
+```
+
+You insert these chunks of code by pressing ctrl+alt+i or by the >Code>Insert chunk menu 
+
+### Q1.2: Insert a chunk of code that uses the head() function to inspect the cars dataset
+
+Try and knit the document again and see how the html document looks!
+
+
+---
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r}
+plot(pressure)
+```
+
+## Running a chunk of code
+
+Have a look at the "run" menu - upper right corner of this panel.
+
+Note how you run lines, chunks and all code.
+
+Try and run the chunk:
+
+```{r}
+head(cars)
+plot(pressure)
+```
+
+Also try and use the keyboard shortcuts to run the chunk
+
+# Exercise week 1
+
+We will load the data that is built into the fivethirtyeight package.
+
+As an alternative you could find the dataset online, save it and read it from the file.
+
+You can go to https://fivethirtyeight.com/ and download datasets from there.
+
+The link to data: https://data.fivethirtyeight.com/ and find the row with the text "Some People Are Too Superstitious To Have A Baby On Friday The 13th"
+
+You can download a zip file and/or read the story.
+
+## Getting data from https://fivethirtyeight.com/
+
+```{r results=""asis""}
+# To see all available datasets in the package
+# data(package = "fivethirtyeight")
+
+# To import a specific dataset
+# data(US_births_1994_2003)
+# help(US_births_1994_2003)
+summary(US_births_1994_2003)
+```
+
+## Q2.1: Make a scatterplot of births pr. day and color it by day of the week
+
+```{r}
+data <- US_births_1994_2003
+ggplot(data = data, aes(x = date, y = births, colour = day_of_week)) +
+    geom_point()
+```
+---
+
+You can already answer interesting questions like:
+
+## Q2.2: Is there an increasing or decreasing number of births in the US?
+increasing
+## Q2.3: Is there an association between day of week and number of births?
+yes
+## Q2.4: Is there a yearly seasonality in birth numbers?
+yes
+## Q2.5: Make a boxplot of births pr. day but with day of week on the X axis and use facet_wrap() to make a subplot for each year.
+
+```{r}
+ggplot(data, aes(x = day_of_week, y = births)) +
+    geom_boxplot() +
+    facet_wrap(~year)
+```
+
+---
+
+## Q2.6: Explain your results. What are the interesting patterns?
+
+
+---
+
+# Bonus - use chatGPT for learning R
+
+If you look at your scatterplot you see clearly that the datapoints fall into two chunks.
+
+## Bonus Q: Use colors to show what is behind this pattern. Also, investigate if there is a strong difference between Saturdays and Sundays.
+
+Use chatGPT to mutate the date into a factor with levels "weekday", "saturday" and "sunday".
+
+
+Use chatGPT to make a scatterplot with date on x axis, number of births on y and colored by the factor.
+
+```{r}
+data <- US_births_1994_2003
+
+data <- data %>%
+    mutate(date = as.factor(date)) %>%
+    mutate(date = ifelse(day_of_week == "Sat", "Sat", ifelse(day_of_week == "Sun", "Sun", "Weekday")))
+
+ggplot(data, aes(x = US_births_1994_2003$date, y = births, color = date)) +
+    geom_point() +
+    labs(
+        title = "Number of Births by Day of Week",
+        x = "Day of Week",
+        y = "Number of Births"
+    )
+
+head(data)
+```
+
+
+
+
+Discuss the plot and the possible underlying causes.
+
+
+---
+
+
+
+---
+
+
