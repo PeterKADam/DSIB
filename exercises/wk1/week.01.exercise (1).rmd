@@ -9,7 +9,7 @@ editor_options:
 ---
 
 # Learning goals for this exercise
- 
+
  * Learn how to install and load packages
  * Get a basic introduction to Rstudio (TA)
  * Knit a Rmarkdown document (this document)
@@ -178,7 +178,7 @@ head(data)
 ```
 
 
-
+	
 
 Discuss the plot and the possible underlying causes.
 

@@ -1,0 +1,188 @@
+---
+title: "Data Science for Bioinformatics - Week 02"
+output: 
+  html_document:
+    code_folding: show
+    toc: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+# Learning goals for this exercise
+
+Get a feel for some R functions that we use a lot for data exploring
+ 
+ * dim()
+ * nrow()
+ * ncol()
+ * names()
+ * summary()
+ * select()
+ * filter()
+ * group_by()
+ * summarise()
+ * mutate()
+
+# The mammals dataset
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(magrittr)
+
+
+mammals <- read_csv(file = r"(exercises\wk2\dataset.01.rsbl20150010supp1.csv)")
+
+mammals
+```
+
+Note that we used read_csv() to the read the input file.
+
+## Q1.1: Can you use read_delim() to read it? read_tsv()?
+
+```{r}
+read_delim(file = r"(exercises\wk2\dataset.01.rsbl20150010supp1.csv)", delim = ",")
+
+# read_tsv(file = r"(exercises\wk2\dataset.01.rsbl20150010supp1.csv)", delim = ",")
+```
+
+---
+
+## Inspect data
+
+Use dim(), nrow(), ncol(), names(), head() and summary() to inspect the dataset
+
+## Q1.2: How many rows and columns are in the dataset?
+
+```{r}
+dim(mammals)
+```
+17327 rows, 11
+
+---
+
+## Q1.3: Which columns are text?
+
+```{r}
+summary(mammals)
+```
+gene, species, labs, chrMark, chr
+
+---
+
+## Q1.4: Which columns are numbers?
+
+dN, dS, dNdS,RPKM, Tau, GC3
+
+---
+
+# Gene expression in the mammals dataset
+
+## Q2.1: Vizualize the distribution of gene expression (RPKM) across all species
+
+So basically, make a new code chunk and make a histogram that shows the distribution of RPKM for all species in the same plot.
+
+```{r}
+ggplot(data = mammals) +
+    geom_histogram(mapping = aes(x = RPKM))
+```
+
+---
+
+## Q2.2: Make a new variable called "expression" that is the log10(RPKM+1)
+
+Hint: use the mutate function
+
+```{r}
+mammals %>%
+    mutate(expression = log10(RPKM + 1)) %>%
+    ggplot() +
+    geom_histogram(mapping = aes(x = expression))
+```
+
+---
+
+## Q2.3: Visualize the overall distribution of the expression but for each species separatedly?
+
+Hint: facet_wrap()
+```{r}
+mammals %>%
+    mutate(expression = log10(RPKM + 1)) %>%
+    ggplot() +
+    geom_histogram(mapping = aes(x = expression)) +
+    facet_wrap(~Species)
+```
+
+---
+
+## Q2.4: Visualize the overall distribution of the expression in humans and mouse.
+
+You probably need a filter() - and then you can choose how you will present it.
+
+```{r}
+mammals %>%
+    filter(Species %in% c("Human", "Mouse")) %>%
+    mutate(expression = log10(RPKM + 1)) -> mammalsfilter
+
+mammalsfilter %>%
+    ggplot() +
+    geom_histogram(mapping = aes(x = expression))
+
+mammalsfilter %>%
+    ggplot() +
+    geom_histogram(mapping = aes(x = expression)) +
+    facet_wrap(~Species)
+```
+Also: we can compare things using different operators.
+
+You can find them with
+
+?Comparison
+
+And the special %in% is described here:
+
+?match
+
+.... I use %in% a lot!
+
+
+```{r}
+"Hello" %in% c("Hello", "world")
+"Hello" %in% c("Goodbye", "cruel", "world")
+```
+
+
+---
+
+## Q2.5: What is the mean, median and standard deviation of the expression for each Species?
+
+Hint: mutate, group_by and summarise
+
+```{r}
+mammals  %>% group_by(Species) %>% summarise(mean = mean(RPKM), median = median(RPKM), sd = sd(RPKM))
+```
+```
+
+---
+
+
+
+```{r}
+geom_pointrange
+```
+# Open question
+
+Some open questions that you can answer (pick a single one - or come up with your own question!)
+
+ * Are dNdS values the same for all species?
+
+ * Are high dNdS genes sitting on autosomes or X/Y chromosomes?
+
+ * Are genes expression the same across species?
+
+If you can't really solve these - then think about what you would like to do: i.e. describe in words what you would like your code to do.
+
+Again, you are welcome to use chatGPT and/or google to help you.
+
+
+
