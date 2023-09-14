@@ -1,0 +1,37 @@
+---
+title: "Data Science for Bioinformatics - Week 03"
+output: 
+  html_document:
+    code_folding: show
+    toc: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+pokemon <- read.csv(r"(assignment1\pokemon.csv)")
+pokemon_filtered <- pokemon %>%
+    filter(GENERATION %in% c(1, 2, 3, 4, 5, 6, 7, 8) & COLOR != "Grim Neigh") %>%
+    mutate(GENERATION = as.factor(GENERATION))
+```
+
+```{r}
+pokemon_filtered %>%
+    group_by(COLOR) %>%
+    ggplot(aes(x = COLOR)) +
+    geom_point() +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+# summarise(ATK = mean(ATK), DEF = mean(DEF), HP = mean(HP), SPEED = mean(SPD), SP_ATK = mean(SP_ATK), SP_DEF = mean(SP_DEF))
+```
+
+```{r}
+
+```
+
+```{r}
+unique(pokemon_filtered$COLOR)
+```

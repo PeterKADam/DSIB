@@ -19,11 +19,9 @@ editor_options:
 # Loading library and getting ready.
 
 ```{r}
-
 library(tidyverse)
 
-theme_set(theme_classic(base_size=10))
-
+theme_set(theme_classic(base_size = 10))
 ```
 
 # Before you begin - a few tricks 
@@ -33,11 +31,9 @@ theme_set(theme_classic(base_size=10))
 "Solve in R" could be: What is the probability of getting TTTT with a fair coin (four tails in a row).
 
 ```{r}
-
 prob_tail <- 0.5
 
 (prob_tail^4)
-
 ```
 
 Another way of solving/checking is brute force estimating it.
@@ -77,7 +73,6 @@ Run the code line by line and notice the output.
 
 
 ```{r}
-
 set.seed(1) # We set the random number generator so we all get identical results.
 sample(x = c("H", "T"), size = 4, replace = T) # See what this function does?
 sample(x = c("H", "T"), size = 4, replace = T) # See what this function does?
@@ -90,14 +85,14 @@ sample(x = c("H", "T"), size = 4, replace = T)
 sample(x = c("H", "T"), size = 4, replace = T)
 sample(x = c("H", "T"), size = 4, replace = T)
 
-paste(sample(x = c("H", "T"), size = 4, replace = T), collapse="")
+paste(sample(x = c("H", "T"), size = 4, replace = T), collapse = "")
 
 # Make a coin flipping function in R
 
 flip_coin <- function(n) {
-  flip <- sample(x = c("H", "T"), size = n, replace = T)
-  toss <- paste(flip, collapse="")
-  return(toss)
+    flip <- sample(x = c("H", "T"), size = n, replace = T)
+    toss <- paste(flip, collapse = "")
+    return(toss)
 }
 
 set.seed(1)
@@ -111,23 +106,24 @@ set.seed(0)
 y <- rep(NA, 1000000) # We output to a vector - for speed (Remember that it is super fast to write to a vector!!?)
 
 for (i in 1:1000000) {
-  y[i] <- flip_coin(4)
-  if (i %% 10000 == 0) { # A "progress" bar - print a "." for every 10000 calls
-    cat(".")
-    flush.console()
-  }
+    y[i] <- flip_coin(4)
+    if (i %% 10000 == 0) { # A "progress" bar - print a "." for every 10000 calls
+        cat(".")
+        flush.console()
+    }
 }
 
-pd <- tibble(tosses=y) # convert output to a data frame
-rm(i,y)
+pd <- tibble(tosses = y) # convert output to a data frame
+rm(i, y)
 
 sum(pd$tosses == "HTHT")
-
 ```
 
 ## Q1.1: What is my brute force estimate of the probability of getting TTTT with a coin using 1 million simulations?
 
-
+```{r}
+sum(pd$tosses == "TTTT") / 1000000
+```
 ---
 
 ## Q1.2: Does it look like that all combinations of four throws have the same probablity?
@@ -135,6 +131,17 @@ sum(pd$tosses == "HTHT")
 I.e. does TTTT have the same probability as THTH...
 
 You can use a plot or calculations to answer this.
+
+```{r}
+# Create a table of the frequencies of each combination
+freq_table <- table(pd$tosses)
+
+# Print the table
+freq_table
+
+# Create a bar plot of the frequencies
+barplot(freq_table, main = "Frequencies of Four Coin Tosses", xlab = "Toss Combination", ylab = "Frequency")
+```
 
 
 ---
@@ -171,15 +178,13 @@ So in order to make you comfortable about sampling and the different distributio
 Hint:
 
 ```{r}
-
-(pd <- tibble(x=1:100))
+(pd <- tibble(x = 1:100))
 
 set.seed(1)
-(pd <- tibble(x = sample(c("Palle", "Thomas"), size = 10, replace = TRUE, prob = c(0.8,0.2) )))
+(pd <- tibble(x = sample(c("Palle", "Thomas"), size = 10, replace = TRUE, prob = c(0.8, 0.2))))
 
 set.seed(2)
-(pd <- tibble(x = sample(c("Palle", "Thomas"), size = 10, replace = TRUE, prob = c(0.8,0.2) )))
-
+(pd <- tibble(x = sample(c("Palle", "Thomas"), size = 10, replace = TRUE, prob = c(0.8, 0.2))))
 ```
 
 ## Your task:
@@ -196,20 +201,39 @@ Hint: https://www.google.com/search?q=R+simulate+normal+distribution
 
 Or.. chatGPT or similar? Try it!
 
+```{r}
+pd <- tibble(x = rnorm(1000, mean = 1000, sd = 200))
+pd %>% ggplot(aes(x = x)) +
+    geom_histogram(bins = 100)
+```
 
 ---
 
 ### Q2.2: A uniform distribution with minimum 10 and maximum 200
 
+```{r}
+pd <- tibble(x = runif(1000, min = 10, max = 200))
+pd %>% ggplot(aes(x = x)) +
+    geom_histogram(bins = 100)
+```
 
 ---
 
 ### Q2.3: A chi square distribution with 1 degrees of freedom
+```{r}
+pd <- tibble(x = rchisq(1000, df = 1))
+pd %>% ggplot(aes(x = x)) +
+    geom_histogram(bins = 100)
+```
 
 ### Q2.4: How big a proportion of your random chi-square values are > 3.84?
 
 (If you had a stats course you may remember this critical value of 3.84)
 
+```{r}
+sum(pd$x > 3.84) / 1000
+```
+0.041
 
 ---
 
@@ -220,15 +244,30 @@ So we ask you to sample 100 genes (and their lengths) with replacement.
 And create a data frame with a column holding the gene lengths as well as visualize the distribution.
 
 ```{r}
-
-df <- read_csv(file = "chap04e1HumanGeneLengthsLongestTranscript.csv")
-
+df <- read_csv(file = r"(D:\repos\DSIB\exercises\wk3\chap04e1HumanGeneLengthsLongestTranscript - Copy.csv)")
 ```
+
+```{r}
+df2 <- slice_sample(df, n = 100, replace = TRUE)
+
+ggplot(df2, aes(x = size)) +
+    geom_histogram(bins = 30)
+```
+
 
 
 ---
 
 ### Q2.6: Plot the distribution of all the genes. Do you expect the mean or median gene length to be the largest? Why? Check it!
+
+```{r}
+ggplot(df, aes(x = size)) +
+    geom_histogram(bins = 30)
+```
+
+```{r}
+summarise(df, mean = mean(size), median = median(size))
+```
 
 
 ---
@@ -242,6 +281,24 @@ Now, try and make many samples of 56 genes and calculate many median lengths.
 ## Q3.1: How big a proportion of your samples had a median length >= 3654?
 
 REMEBER THE LECTURE LAST WEEK!! R Speed!!!
+
+```{r}
+# Set the number of samples to generate
+n_samples <- 1000
+
+# Create an empty vector to store the median lengths
+med_lengths <- numeric(n_samples)
+
+# Generate samples and calculate median lengths
+for (i in 1:n_samples) {
+    sample_genes <- slice_sample(df, n = 56, replace = TRUE)
+    med_lengths[i] <- median(sample_genes$size)
+}
+
+# Calculate the proportion of samples with median length >= 3654
+summarise(tibble(med_lengths), prop = sum(med_lengths >= 3654) / n_samples)
+```
+
 
 
 ---
@@ -261,16 +318,20 @@ Now we want you to use your knowledge so far to simulate different kind of dices
 Hint:
 
 ```{r}
-
 sample(x = 1:4, size = 10, replace = TRUE)
-
 ```
 
+```{r}
+dice <- sample(x = 1:6, size = 10000, replace = TRUE)
+```
 
 ---
 
 ## Q3.3: An unfair 6-sided dice that never throws 5 (but have equal probability of 1,2,3,4 and 6)
 
+```{r}
+dice <- sample(x = c(1, 2, 3, 4, 6), size = 10000, replace = TRUE)
+```
 
 ---
 
@@ -280,6 +341,13 @@ In order to check that you do this correctly, you should probably simulate many 
 
 Hint: ?sample
 
+```{r}
+dice <- sample(x = c(1, 2, 3, 4, 5, 6), size = 10000, replace = TRUE, prob = c(0.9 / 5, 0.9 / 5, 0.9 / 5, 0.9 / 5, 0.1, 0.9 / 5))
+```
+
+```{r}
+sum(dice == 4) / 10000
+```
 
 ---
 
@@ -294,7 +362,9 @@ So 11111, 222222, 33333, 44444, 55555, 66666 is yatzy.
 But how easy is it to get it in a single throw with 5 dices?
 
 You can calculate or simulate
-
+```{r}
+(1 / 6)^4
+```
 
 ---
 
@@ -316,7 +386,10 @@ Describe your strategy and if you have too much time: code it.
 This is not easy. And you are allowed to use any help you can find.
 
 
-
+```{r}
+1 - (1 - (1 / 6)^4)^3
+```
+x
 ---
 
 
