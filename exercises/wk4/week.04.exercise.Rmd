@@ -1,0 +1,139 @@
+---
+title: "Data Science for Bioinformatics - Week 04"
+author: "Thomas Bataillon"
+date: "Last update: `r Sys.Date()`"
+output:
+  html_document:
+    # theme: united
+    code_folding: show
+    toc: true
+    toc_depth: 2
+---
+
+
+
+# Visualization & analysis on the `mammals` dataset 
+The data is from: 
+
+Nguyen L-P, Galtier N, Nabholz B. 2015 Gene expression, chromosome heterogeneity and the fast-X effect in mammals. Biol. Lett.11 : 20150010.
+
+In week 2, you have made some  basic visual displays of a fraction of the data (the RPKM variable), producing histogram for each species.
+
+Here, we continue to work on this dataset and the goal of this R session is to dig deeper in the data visualization and the data analysis of the paper.
+
+More specifically 2 main goals of this week are :
+
+- To reproduce the Figure 1 of the paper
+
+- To use binomial tests for proportions to test if the genes sitting on X chromosome have atypical patterns of gene expression ( as measured by `RPKM`) and gene evolution (as measured by `dn/ds`). 
+
+Note that these tests are not made as such in the paper where they rely instead on a global linear model where they model all variables at once (we will come to that in a few weeks,... patience ;-) !)
+
+# Loading the data
+```{r}
+library(tidyverse)
+# To load mammals ... CHECK YOUR PATH ... if it fails check where you are --> getwd() ;-)
+mammals <- read_csv(file = "exercises/wk4/dataset.01.rsbl20150010supp1.csv")
+dim(mammals)
+summary(mammals) # never hurts to peek again quickly at the data
+```
+
+# Exploring gene expression and  covariation with dn/ds in the mammals dataset. 
+
+>Q1: Create a new dataset that contains the means per chromosome of dn/ds and log10(RPKM+1)
+
+- Call the new dataset `mammalsmeans`. 
+
+- Recall that we did a new variable called `expression` that is the log10(RPKM+1)
+
+So let's just do that with `mutate()`:
+
+```{r}
+mammals <- mammals %>% mutate(expression = log10(RPKM + 1))
+```
+
+
+Hint: adapt the code you used in previous weeks when obtaining the mean, median and standard deviation of the expression for each Species: 
+
+Here an example of how you can `summarise()` combined with `group_by()` to get a mean by species :
+```{r}
+df_species_means <- mammals %>%
+    group_by(Species) %>%
+    summarise(
+        meandN = mean(dN),
+        meandS = mean(dS),
+        n = n()
+    ) %>%
+    mutate(meandNdS = meandN / meandS)
+```
+
+... and how to make a quick summary table on the fly : 
+```{r}
+head(df_species_means) %>%
+    knitr::kable(format = "pandoc")
+```
+
+So now you want to do essentially the same thing but your grouping is not just `species` but the `species & chromosome` level. 
+Do you feel that you are still in the dark on how to do that, now is the time to google it or to read (again) through the r4ds online book section:
+
+<https://r4ds.had.co.nz/transform.html#grouping-by-multiple-variables>
+
+
+```{r}
+mammalsmeans <- mammals %>%
+    group_by(Species, chr) %>%
+    summarise(
+        meandN = mean(dN),
+        meandS = mean(dS),
+        n = n(),
+        meadianRPKM = median(RPKM), sd = sd(RPKM)
+    ) %>%
+    mutate(mean_dNdS = meandN / meandS)
+```
+
+>Q2: Reproduce the figure 1 of the paper where the covariation between dN/dS and RPKM is visualized.
+
+```{r}
+mammalsmeans %>% ggplot(aes(x = meadianRPKM, y = mean_dNdS, color = Species)) +
+    geom_point() +
+    geom_smooth(method = "lm", se = FALSE)
+```
+
+Hint: You need 2 *layers* of ggplot instructions: 
+   + the scatter plot `geom_point()`, 
+   + and `geom_smooth()` can be used in ggplot to add regression lines... 
+
+If needed Lookup/ re-use examples of `geom_smooth()` the r4ds book:
+
+<https://r4ds.had.co.nz/data-visualisation.html>
+
+
+# Are genes on the X more often lowly expressed ?
+
+This is one of the salient points of the analysis made by the authors.  
+
+So for each species in the dataset:
+ 
+>Q3:Calculate the number (and proportion) of genes that are in the lower 15% range of gene expression for each chromosome. 
+
+Save your dataset as `mammalscutoff15`
+
+Note that the 15% cutoff value you should use for gene expression is species specific.
+
+
+>Q4:test if the X chromosome has a higher proportion of genes in the lower 15% of expression relative to the rest of the genome.  
+
+Hint. Adapt the book ABD example of the binomial test for a proportion (Example 7.2 Sex and the X) to do that .
+
+
+
+
+>Q bonus question: 
+
+If we restrict ourselves to subset of the (15%) low expression genes, what proportion of these genes have a high dn/ds?
+
+To answer that, use the quantiles of the dn/ds distribution to decide on a cutoff), and use again the idea of a binomial test to decide whether this proportion significantly different between autosomes and the X. 
+
+
+
+> Congrats, you have done a first impressive round of datascience !

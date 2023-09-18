@@ -1,37 +1,52 @@
 ---
-title: "Data Science for Bioinformatics - Week 03"
+title: "Data Science for Bioinformatics - Week 03 - Handin1"
 output: 
   html_document:
     code_folding: show
     toc: yes
-editor_options: 
-  chunk_output_type: console
 ---
 
 ```{r}
 library(tidyverse)
+pokemon <- read.csv("pokemon.csv")
 ```
 
 ```{r}
-pokemon <- read.csv(r"(assignment1\pokemon.csv)")
-pokemon_filtered <- pokemon %>%
-    filter(GENERATION %in% c(1, 2, 3, 4, 5, 6, 7, 8) & COLOR != "Grim Neigh") %>%
-    mutate(GENERATION = as.factor(GENERATION))
+pokemon <- na.omit(pokemon) %>%
+    filter(LEGENDARY == 0) %>%
+    filter(MEGA_EVOLUTION == 0)
+pokemon$GENERATION <- as.factor(pokemon$GENERATION)
 ```
 
 ```{r}
-pokemon_filtered %>%
+stats_by_colour <- pokemon %>%
     group_by(COLOR) %>%
-    ggplot(aes(x = COLOR)) +
-    geom_point() +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1))
-# summarise(ATK = mean(ATK), DEF = mean(DEF), HP = mean(HP), SPEED = mean(SPD), SP_ATK = mean(SP_ATK), SP_DEF = mean(SP_DEF))
+    summarize(
+        Stats = mean(TOTAL),
+        HP = mean(HP),
+        ATK = mean(ATK),
+        DEF = mean(DEF),
+        SP_ATK = mean(SP_ATK),
+        SP_DEF = mean(SP_DEF),
+        SPD = mean(SPD)
+    )
 ```
 
 ```{r}
+# Reshape the data from wide to long format for a scatter plot
 
+stats_by_colour_long <- pivot_longer(stats_by_colour, cols = c(ATK, DEF, HP, SPD), names_to = "Variable", values_to = "Value")
+
+# Create a scatter plot with adjusted point size and transparency
+ggplot(stats_by_colour_long, aes(x = COLOR, y = Value, color = Variable)) +
+    geom_point(size = 3, alpha = 0.7) + # Adjust size and alpha
+    labs(
+        title = "Mean stats of Pokemon by color (Excluding SP_ATK and SP_DEF)",
+        x = "COLOR",
+        y = "Value",
+        color = "Stat" # Change the legend title to "Stat"
+    ) +
+    scale_color_manual(values = c(ATK = "red", DEF = "blue", HP = "green", SPD = "yellow")) +
+    theme(axis.text.x = element_text(color = ifelse(stats_by_colour$COLOR == "White", "#ffc400", stats_by_colour$COLOR)))
 ```
 
-```{r}
-unique(pokemon_filtered$COLOR)
-```
