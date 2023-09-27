@@ -1,0 +1,208 @@
+---
+title: "Data Science for Bioinformatics - Week 05"
+author: "Thomas Bataillon"
+date: "Last update: `r Sys.Date()` "
+output:
+  html_document:
+    # theme: readable
+    highlight: espresso
+    code_folding: show
+    toc: true
+    toc_depth: 2
+
+---
+
+
+
+# ABD book readings
+
+Read through chapter 8. The lecture Tuesday will be the Poisson distribution and its uses as well as goodness of fit tests (using the infamous $\chi^2_{obs}$ test statistic and the $\chi^2_{1,2,3,... df}$ probability distribution, these are two different things !!). 
+
+We will discuss various types of null hypotheses, and p-value and the fact that p-values also have a probability distribution(!).
+
+In this week exercise session,we set the mammals on pause and use examples from the book and a few genetic and genomic datasets. 
+
+
+
+# A. R warm up: The "extinction" example 8.6 from the book 
+
+Try and do it yourself .. or get extra hints at <https://whitlockschluter.zoology.ubc.ca/r-code/rcode08>
+
+Here is the original data from the book example:
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+extinctData <- read_csv( file = "../datasets/chap08e6MassExtinctions.csv")
+
+dim(extinctData) #Check: you should have 76 obs (strata)  
+table(extinctData$numberOfExtinctions) ##Can you See "holes" in the vector created by table() --> BAD!
+extinctData$nExtinctFactor <- factor(extinctData$numberOfExtinctions, levels = c(0:20)) ##forcing table to look at all entries
+(extinctTable <- table(extinctData$nExtinctFactor)) ## CHECK it should be identical to the counts of the book table
+
+```
+
+
+>Step A: calculate the mean number of extinction per strata
+```{r}
+mean(extinctData$numberOfExtinctions)
+```
+
+>Step B: calculate the expected counts extinction for each class in the data under a random model of extinction
+
+```{r}
+exptected <- tibble(
+    xs = seq(from = 0, to = 20, by = 1),
+    probability = dpois(
+        x = xs,
+        lambda = mean(extinctData$numberOfExtinctions)
+    ) * 76
+)
+```
+
+>Step C: calculate the lack of fit statistic ($X_{obs}^2$) of the data to this model
+
+```{r}
+(pooled_exp <- c(
+    sum(exptected$probability[1:2]),
+    exptected$probability[3:8],
+    sum(exptected$probability[9:21])
+))
+(pooled_obs <- c(
+    sum(extinctTable[1:2]),
+    extinctTable[3:8],
+    sum(extinctTable[9:21])
+))
+
+
+
+df_pool <- tibble(pooled_obs, pooled_exp)
+```
+
+>Step D: 
+
+Discuss if /why you should pool some classes, decide on a number of classes and accordingly choose df for the null distribution
+
+```{r}
+df_pool <- mutate(
+    df_pool,
+    pooledX2 = ((pooled_obs - pooled_exp)^2) / pooled_exp
+)
+```
+amounts over 8 should probably be pooled to get the prob over 5, aswell as 0 and 1 to remove the 1.
+
+>Step E: 
+
+Use `pchisq()` to get the p-value: do you accept or reject H0?
+
+```{r}
+x2 <- sum(df_pool$pooledX2)
+(p <- pchisq(q = x2, df = 6, lower.tail = F))
+```
+
+
+
+# B. Using the Poisson distribution to model coverage data  
+
+
+## Mastering POISSON distributions calculations and simulations: example of genome sequencing
+
+>Lets call X a random variable that tracks how many times a nucleotide was sequenced in a genome for a 2X experiment 
+
+What *2X* means is that on average we have produced a volume V of DNA sequences that correspond to $V = 2  G$ if G is the genome size... so we expect on average that any nucleotide is sequenced 2 times. but this is an average.. and there can be some variation around that average .. :) 
+
+>Q1: If sequencing is truly random discuss why it is a fair assumption to assume X is Poisson ? 
+
+
+>Q2: What is the probability that a given nucleotide was not sequenced ?
+
+
+>Q3: What is the probability that a stretch of 100 bp was missed entirely ? 
+
+
+>Q4: use R and the rpois() function to simulate the distribution of coverage you expect if you had a bacterial genome with :
+
+1. 90% of genes with *intermediate GC content* where sequencing was 5X
+2. 10% of genes with *very low GC content* (because they were recently acquired from a GC poor bacteria) but where sequencing did not work well so only 1X was actually achieved
+3. Simulate a genome of 5000 genes 
+
+>Q5: will this look like a Poisson distribution ?
+
+
+
+## A real life case : making power simulations to guide a sequencing experiment 
+As the token bioinformatics/ data scientist you will often be asked to  offer advice in research projects to make suggestions on how to best allocate sequencing resources. 
+Imagine you were sitting in a consortium meeting where biologists study Aedes egypti a charming beast with a very elegant black/ white stripes but incicdentally is also known as, the yellow fever mosquito, and can host (and spread) dengue fever, chikungunya, Zika fever, Mayaro and yellow fever viruses.
+They are eager to use differences in genome coverage (expressed as the number of mapped reads on a given gene) among individuals to detect polyorphism for a gene duplication among strains. The rationale being that some insects contains genes that when duplicated confer the ability to resist an insecticide (`Ace-1` is a famous gene duplication in many important mosquitoes). 
+
+They expect that a fraction of individuals of the population they study contain 2 virtually identical copies of Ace instead of 1. 
+
+You have money for the the equivalent of 500X genome coverage to allocate among individuals from a population. 
+You intend to use the mean to variance ratio test to detect if coverage is poisson or shows over dispersion suggesting the presence of a polymorphic duplication. (the duplication meaning that expected coverage is doubled for individuals with Ace-1-D)
+
+Imagine that the duplication is in frequency 5, 10 or 25%. 
+
+Biologist are eager to know: how many individuals should we sequence to maximize your power to detect the gene duplication ? 
+
+Here is a suggsted step by step procedure to figure that out:
+
+>Q1 Simulate 1000 dataset with a range of individuals from 10, to say 100 individuals that accordingly are sequenced at an expected coverage ranging from 5X to 50X.
+
+> Q2 For each dataset simulate the observed coverage (nb of reads mapped on Ace-1) the observed Variance/Mean ratio in the sample for the observed coverage across individuals.
+
+> Q3 For each expected coverage simulate the null distribution you expect for this ratio and calculate a threshold value to reject the Poisson null hypothesis.
+
+> Q4 Use this threshold and record what proportion of the simulated dataset provide evidence for the pressence of gene duplication on the data
+
+
+
+
+
+# C. The "goodness of fit of the goodness of fit": a meta analysis of Mendel experiments
+
+This historical data is central to genetics and the resuots of various F2 and F3 crosses datasets have been reanalyzed multiple times and also was the subject of much controversy.
+
+Here we will look in a "meta-analysis" fashion at all experiments - summarized by their p-values- together and ask: 
+
+is the fit to the data "too good to be true"  ?
+
+NB:This exercises is much inspired  - after "skipping" the rather hard core mathematical statistical derivation- by a paper 
+
+A Statistical Model to Explain the Mendel- Fisher Controversy, Ana M. Pires and Joao A. Branco. Statistical Science 2010, Vol. 25, No. 4, 545-565
+DOI: 10.1214/10-STS342
+
+
+We have the p-values associated with 84 crosses that were reported and reanalyzed multiple times as examples of GOF tests. These are tests of observed versus expected proportions in these independent 84 crosses experiment.
+
+Here we assume that the data were analyzed correctly: i.e. we assume that each of the p-values were computed correctly and that tests (and hence also p-values) are independent.
+
+Our "data" is the empirical (observed) distribution of $n= 84$ p-values that is binned in 10 classes: from 0-0.1, 0.1-0.2, etc.
+
+```{r}
+observed_p <- c(0,5,6,9,13,13,9,7,13,9)
+sum(observed_p) #check we have 84 p-values
+```
+
+>Q1 Calculating the p-value of a single cross 
+
+Argue why the  $\chi^2$ distribution is expected a good approximation for a $X^2$ stat describing the goodness of fit. How many d.f. are to be used in that case  ?
+
+Simulate 10^4 datasets, where each dataset is a cross made by Mendel (assistants) where 3 categories are expected in the 1:2:1 ratio and 100 plants are observed.  Compare visually the empirical distribution of the the $X^2$ statistics and a $\chi^2$ distribution 
+
+
+>Q2 What distribution do we expect for p-values under the null hyopothesis for a GOF test? 
+
+Use probabilities calculations or use R to simulate the distribution of p-values you expect if all tests done were coming form the null 
+NB in that case, given that Mendel's segregation ratios are correct we expect that the data should come from the null. 
+
+
+
+>Q3. What distribution we expect for the p-values under $H_0$ ?
+
+
+
+>Q4. Is the distribution of empirical p-values compatible with H0?
+
+Discuss what is the most obvious discrepnancy between the null distribution of P values and the observed one. 
+Suggest what could account for this discrepancy.
+
+
