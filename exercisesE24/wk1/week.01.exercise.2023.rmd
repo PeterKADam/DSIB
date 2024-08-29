@@ -164,16 +164,18 @@ Use chatGPT to make a scatterplot with date on x axis, number of births on y and
 data <- US_births_1994_2003
 
 data <- data %>%
-    mutate(date = as.factor(date)) %>%
-    mutate(date = ifelse(day_of_week == "Sat", "Sat", ifelse(day_of_week == "Sun", "Sun", "Weekday")))
+    mutate(datetype = as.factor(date)) %>%
+    mutate(datetype = ifelse(day_of_week == "Sat", "Sat", ifelse(day_of_week == "Sun", "Sun", "Weekday")))
 
-ggplot(data, aes(x = US_births_1994_2003$date, y = births, color = date)) +
+plot <- ggplot(data, aes(x = date, y = births, color = datetype)) +
     geom_point() +
     labs(
         title = "Number of Births by Day of Week",
         x = "Day of Week",
         y = "Number of Births"
     )
+
+plot
 
 head(data)
 ```
