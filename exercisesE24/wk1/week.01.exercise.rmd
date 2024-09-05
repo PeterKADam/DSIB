@@ -166,6 +166,7 @@ Use chatGPT to make a scatterplot with date on x axis, number of births on y and
 
 Discuss the plot and the possible underlying causes.
 
+weekends are for fishing and drinking beer
 
 ---
 

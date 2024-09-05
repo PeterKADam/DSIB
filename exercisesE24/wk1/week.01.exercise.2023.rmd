@@ -123,8 +123,10 @@ summary(US_births_1994_2003)
 data <- US_births_1994_2003
 ggplot(data = data, aes(x = date, y = births, colour = day_of_week)) +
     geom_point()
+	
 ```
----
+
+
 
 You can already answer interesting questions like:
 
@@ -137,17 +139,16 @@ yes
 ## Q2.5: Make a boxplot of births pr. day but with day of week on the X axis and use facet_wrap() to make a subplot for each year.
 
 ```{r}
-ggplot(data, aes(x = day_of_week, y = births)) +
-    geom_boxplot() +
-    facet_wrap(~year)
+US_births_1994_2003  |>  ggplot(aes(x = day_of_week, y = births, fill=day_of_week)) +
+    geom_boxplot() + facet_wrap(~year)
 ```
 
----
+
 
 ## Q2.6: Explain your results. What are the interesting patterns?
 
 
----
+
 
 # Bonus - use chatGPT for learning R
 
@@ -184,6 +185,7 @@ head(data)
 	
 
 Discuss the plot and the possible underlying causes.
+
 
 
 ---
