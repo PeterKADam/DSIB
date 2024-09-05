@@ -41,6 +41,14 @@ mammals
 
 ```
 
+```{r}
+mammals = drop_na(mammals)
+```
+
+```{r}
+library(ggpubr)
+```
+
 Note that we used read_csv() to the read the input file.
 
 ## Q1.1: Can you use read_delim() to read it? read_tsv()?
@@ -48,7 +56,7 @@ Note that we used read_csv() to the read the input file.
 ```{r}
 read_delim(file = "dataset.01.rsbl20150010supp1.csv", delim = ",")
 
-#read_tsv(file = "dataset.01.rsbl20150010supp1.csv", delim = ",")
+read_tsv(file = "dataset.01.rsbl20150010supp1.csv")
 #nope
 ```
 
@@ -101,9 +109,10 @@ Also, what is the minimum and maximum RPKM value in the dataset?
 
 ```{r}
 ggplot(data = mammals, aes(x = RPKM)) + geom_histogram() + xlim(0, 1000)
-
 ```
-
+```{r}
+mammals[mammals$RPKM > 1000, ]
+```
 
 ---
 
@@ -183,6 +192,8 @@ Hint: mutate, group_by and summarise
 mammals  %>% group_by(Species) %>% summarise(mean = mean(RPKM), median = median(RPKM), sd = sd(RPKM))
 ```
 ---
+
+
 
 # Open question
 
