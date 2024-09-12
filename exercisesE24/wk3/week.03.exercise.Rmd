@@ -1,0 +1,439 @@
+---
+title: "Data Science for Bioinformatics - Week 03"
+output: 
+  html_document:
+    code_folding: show
+    toc: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+# Learning goals for this exercise
+
+ * Get more comfortable with Rstudio and R
+ * Solve some practice problems in the book (answers are in the back of the book).
+ * Perform simple probability calculations in R
+ * Make a small function in R
+ * Use and understand the sample() function (we use this a LOT)
+
+# Loading library and getting ready.
+
+```{r}
+library(tidyverse)
+
+theme_set(theme_classic(base_size = 10))
+```
+
+# Before you begin - a few tricks 
+
+## Solving probability in R - the elegant way and the brute force approach
+
+"Solve in R" could be: What is the probability of getting TTTT with a fair coin (four tails in a row).
+
+```{r}
+prob_tail <- 0.5
+
+(prob_tail^4)
+```
+
+Another way of solving/checking is brute force estimating it.
+
+It is ignoring all probability theory...
+
+It is slow...
+
+...
+
+
+
+
+
+... but?
+
+
+
+
+BUT - it works and it's great in the few cases where you are not able to calculate probabilities (for various reasons).
+
+
+So another way would be to ask 1 million students to throw a coin 4 times. And then I would count how many of the 1 million students got TTTT.
+
+This will take a long time (AU currently lists 38.000 students).
+
+Luckily we can simulate coin throwing in R
+
+...
+
+
+So now I will let R throw a coin 4 times, record the outcome - and repeat 1 million times.
+
+In the end I will count how many times I got TTTT
+
+Run the code line by line and notice the output.
+
+
+```{r}
+set.seed(1) # We set the random number generator so we all get identical results.
+sample(x = c("H", "T"), size = 4, replace = T) # See what this function does?
+sample(x = c("H", "T"), size = 4, replace = T) # See what this function does?
+sample(x = c("H", "T"), size = 4, replace = T) # See what this function does?
+
+# Try again - just to see that the set.seed() actually works
+
+set.seed(1)
+sample(x = c("H", "T"), size = 4, replace = T)
+sample(x = c("H", "T"), size = 4, replace = T)
+sample(x = c("H", "T"), size = 4, replace = T)
+
+paste(sample(x = c("H", "T"), size = 4, replace = T), collapse = "")
+
+# Make a coin flipping function in R
+
+flip_coin <- function(n) {
+    flip <- sample(x = c("H", "T"), size = n, replace = T)
+    toss <- paste(flip, collapse = "")
+    return(toss)
+}
+
+set.seed(1)
+flip_coin(1)
+flip_coin(4)
+flip_coin(4)
+
+# Now we will flip a coin 4 times and do it 1 million times
+
+set.seed(0)
+y <- rep(NA, 1000000) # We output to a vector - for speed (Remember that it is super fast to write to a vector!!?)
+
+for (i in 1:1000000) {
+    y[i] <- flip_coin(4)
+    if (i %% 10000 == 0) { # A "progress" bar - print a "." for every 10000 calls
+        cat(".")
+        flush.console()
+    }
+}
+
+pd <- tibble(tosses = y) # convert output to a data frame
+rm(i, y)
+
+sum(pd$tosses == "HTHT")
+```
+
+## Q1.1: What is my brute force estimate of the probability of getting TTTT with a coin using 1 million simulations?
+
+```{r}
+sum(pd$tosses == "TTTT") / 1000000
+```
+---
+
+## Q1.2: Does it look like that all combinations of four throws have the same probablity?
+
+I.e. does TTTT have the same probability as THTH...
+
+You can use a plot or calculations to answer this.
+
+```{r}
+# Create a table of the frequencies of each combination
+freq_table <- table(pd$tosses)
+
+# Print the table
+freq_table
+
+# Create a bar plot of the frequencies
+barplot(freq_table, main = "Frequencies of Four Coin Tosses", xlab = "Toss Combination", ylab = "Frequency")
+```
+
+
+---
+
+# Book exercises (Analysis of biological data)
+
+## Solve in R the following book exercise as a check 
+
+Do the following practice problems in Chapter 5 to check your knowledge of the simple rules in probability (these will be discussed only briefly in class):
+
+* 1 and 2 (addition and total probability rule) (Brussel sprouts)
+* 12 (Five researchers take a random sample)
+a: 0.95^5
+b: 1-0.95^5
+
+* 14 (HIV tests)
+
+```{r}
+total = 1517
+FN = 4
+TP = 166
+FP = 129
+TN = 1218
+
+(fpr = (FP/(total-(TP+FN))))
+
+(fnr = (FN/(TP+FN)))
+
+(tpr = (TP/(TP+FN)))
+```
+
+* 17 (Handwashing)
+
+```{r}
+
+
+wrm = 0.74
+wrf = 0.83
+
+mt = 40
+ft = 60
+
+total = mt + ft
+
+(pw = wrm * mt / total + wrf * ft / total)
+```
+
+## NOTE: We ask you to write your answers here in your rmarkdown!!!
+
+When you do that, small calculations can easily be included together with your text/notes.
+
+# Using R to calculate and simulate from known probability distributions
+
+During the course we are going to "meet" a number of theoretical probability distributions, there arise in the context of specific types of data and specific random trials that we imagine are "behind" the data: the 4 distributions we are going to meet in the coming chapters are : 
+
+ * the binomial distribution (chapter 6 and 7 in the ABD book)
+ * the Poisson and the chi.square distribution (in chapter 8 )
+ * the infamous "normal" or Gaussian distribution (chapters 10, 11 and 12)
+
+R is pretty effective at drawing random number and calculating the probability of specific events with these distributions.
+
+So in order to make you comfortable about sampling and the different distributions you we are kindly asking you try it...
+
+## Simulating random numbers from your own distribution / theoretical distributions
+
+Hint:
+
+```{r}
+(pd <- tibble(x = 1:100))
+
+set.seed(1)
+(pd <- tibble(x = sample(c("Palle", "Thomas"), size = 10, replace = TRUE, prob = c(0.8, 0.2))))
+
+set.seed(2)
+(pd <- tibble(x = sample(c("Palle", "Thomas"), size = 10, replace = TRUE, prob = c(0.8, 0.2))))
+```
+
+## Your task:
+
+Use R functions to make a tibble/data frame with a column full of your random numbers.
+
+Also, make a plot that shows the distribution of your random numbers.
+
+The random numbers should come from:
+
+### Q2.1: A normal distribution with mean 1000 and SD 200
+
+Hint: https://www.google.com/search?q=R+simulate+normal+distribution
+
+Or.. chatGPT or similar? Try it!
+
+```{r}
+set.seed(69)
+pd <- tibble(x = rnorm(1000, mean = 1000, sd = 200))
+pd %>% ggplot(aes(x = x)) +
+    geom_histogram(bins = 100)
+```
+
+---
+
+### Q2.2: A uniform distribution with minimum 10 and maximum 200
+
+```{r}
+set.seed(69)
+pd <- tibble(x = runif(1000, min = 10, max = 200))
+pd %>% ggplot(aes(x = x)) +
+    geom_histogram(bins = 100)
+```
+
+---
+
+### Q2.3: A chi square distribution with 1 degrees of freedom
+```{r}
+set.seed(69)
+pd <- tibble(x = rchisq(1000, df = 1))
+pd %>% ggplot(aes(x = x)) +
+    geom_histogram(bins = 100)
+```
+
+### Q2.4: How big a proportion of your random chi-square values are > 3.84?
+
+(If you had a stats course you may remember this critical value of 3.84)
+
+```{r}
+sum(pd$x > 3.84) / 1000
+```
+0.041
+
+---
+
+### Q2.5: The empirical distribution of gene length in humans. (The dataset is included)
+
+So we ask you to sample 100 genes (and their lengths) with replacement.
+
+And create a data frame with a column holding the gene lengths as well as visualize the distribution.
+
+```{r}
+current_path = rstudioapi::getActiveDocumentContext()$path 
+setwd(dirname(current_path ))
+print( getwd())
+
+df <- read_csv(file = r"(chap04e1HumanGeneLengthsLongestTranscript.csv)")
+```
+
+```{r}
+df2 <- slice_sample(df, n = 100, replace = TRUE)
+
+ggplot(df2, aes(x = size)) +
+    geom_histogram(bins = 30)
+```
+
+
+
+---
+
+### Q2.6: Plot the distribution of all the genes. Do you expect the mean or median gene length to be the largest? Why? Check it!
+
+```{r}
+ggplot(df, aes(x = size)) +
+    geom_histogram(bins = 30) + xlim(0, 10000)
+```
+
+```{r}
+summarise(df, mean = mean(size), median = median(size))
+```
+
+
+---
+
+# Sampling a NULL distribution from your genes
+
+I have found 56 highly expressed genes with a median length of 3654 - which is longer than the median length of all the genes.
+
+Now, try and make many samples of 56 genes and calculate many median lengths.
+
+## Q3.1: How big a proportion of your samples had a median length >= 3654?
+
+REMEBER THE LECTURE LAST WEEK!! R Speed!!!
+
+```{r}
+# Set the number of samples to generate
+n_samples <- 1000
+
+# Create an empty vector to store the median lengths
+med_lengths <- numeric(n_samples)
+
+# Generate samples and calculate median lengths
+for (i in 1:n_samples) {
+    sample_genes <- slice_sample(df, n = 56, replace = TRUE)
+    med_lengths[i] <- median(sample_genes$size)
+}
+
+# Calculate the proportion of samples with median length >= 3654
+summarise(tibble(med_lengths), prop = sum(med_lengths >= 3654) / n_samples)
+```
+
+
+
+---
+
+Congratulations - you have just calculated a one-sided p-value! 
+
+(You just tested if your 56 genes had a significantly longer median length than all genes.)
+
+## Sampling dices
+
+Now we want you to use your knowledge so far to simulate different kind of dices, throw the dice many times and show us that your simulation works!
+
+"Many" is normally at least 10.000...
+
+## Q3.2: A fair 6-sided dice  
+
+Hint:
+
+```{r}
+sample(x = 1:4, size = 10, replace = TRUE)
+```
+
+```{r}
+dice <- sample(x = 1:6, size = 10000, replace = TRUE)
+```
+
+---
+
+## Q3.3: An unfair 6-sided dice that never throws 5 (but have equal probability of 1,2,3,4 and 6)
+
+```{r}
+library(tidyverse)
+dice <- sample(x = c(1, 2, 3, 4, 6), size = 10000, replace = TRUE)
+
+dice  %>% table() %>% prop.table()
+
+```
+
+---
+
+## Q3.4: An unfair 6-sided dice that throws 5 with probability 0.1, and the other numbers equal probability. 
+
+In order to check that you do this correctly, you should probably simulate many throws
+
+Hint: ?sample
+
+```{r}
+dice <- sample(x = c(1, 2, 3, 4, 5, 6), size = 10000, replace = TRUE, prob = c(0.9 / 5, 0.9 / 5, 0.9 / 5, 0.9 / 5, 0.1, 0.9 / 5))
+```
+
+```{r}
+sum(dice == 4) / 10000
+```
+
+---
+
+## How often do I get yatzy in a single throw?
+
+## Q3.5: How often do you get yatzy (all 5 dices show the same number of eyes) in one throw? 
+
+Yatzee or yatzy? anyway.... you probably know the game.
+
+So 11111, 222222, 33333, 44444, 55555, 66666 is yatzy.
+
+But how easy is it to get it in a single throw with 5 dices?
+
+You can calculate or simulate
+```{r}
+(1 / 6)^4
+```
+
+---
+
+## BONUS Q: describe your strategy for simulating yatzy in 3 throws.
+
+This is not super easy. But the rules are:
+
+You have to keep the dices you select to keep.
+
+So 
+throw 1: 1,2,4,4,6 - I keep 4,4 and reroll the three other dices trying to get more 4s
+
+throw 2: 4,6,6 - I keep the 4 (now I have three of them) and reroll the remaining two dices
+
+throw 3: 4,1 - I now have 4 4s - but that is not yatzy
+
+Describe your strategy and if you have too much time: code it.
+
+This is not easy. And you are allowed to use any help you can find.
+
+
+```{r}
+1 - (1 - (1 / 6)^4)^3
+```
+x
+---
+
+
+

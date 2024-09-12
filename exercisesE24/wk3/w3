@@ -1,0 +1,499 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Data Science for Bioinformatics - Week 03"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Learning goals for this exercise\n",
+    "\n",
+    " * Get more comfortable with Rstudio and R\n",
+    " * Solve some practice problems in the book (answers are in the back of the book).\n",
+    " * Perform simple probability calculations in R\n",
+    " * Make a small function in R\n",
+    " * Use and understand the sample() function (we use this a LOT)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Loading library and getting ready."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "language": "R"
+   },
+   "source": [
+    "library(tidyverse)\n",
+    "\n",
+    "theme_set(theme_classic(base_size = 10))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Before you begin - a few tricks\n",
+    "\n",
+    "### Solving probability in R - the elegant way and the brute force approach\n",
+    "\n",
+    "\"Solve in R\" could be: What is the probability of getting TTTT with a fair coin (four tails in a row)."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "language": "R"
+   },
+   "source": [
+    "prob_tail <- 0.5\n",
+    "\n",
+    "(prob_tail^4)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Another way of solving/checking is brute force estimating it.\n",
+    "\n",
+    "It is ignoring all probability theory...\n",
+    "\n",
+    "It is slow...\n",
+    "\n",
+    "... but?\n",
+    "\n",
+    "BUT - it works and it's great in the few cases where you are not able to calculate probabilities (for various reasons).\n",
+    "\n",
+    "So another way would be to ask 1 million students to throw a coin 4 times. And then I would count how many of the 1 million students got TTTT.\n",
+    "\n",
+    "This will take a long time (AU currently lists 38.000 students).\n",
+    "\n",
+    "Luckily we can simulate coin throwing in R\n",
+    "\n",
+    "So now I will let R throw a coin 4 times, record the outcome - and repeat 1 million times.\n",
+    "\n",
+    "In the end I will count how many times I got TTTT\n",
+    "\n",
+    "Run the code line by line and notice the output."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "language": "R"
+   },
+   "source": [
+    "set.seed(1) # We set the random number generator so we all get identical results.\n",
+    "sample(x = c(\"H\", \"T\"), size = 4, replace = T) # See what this function does?\n",
+    "sample(x = c(\"H\", \"T\"), size = 4, replace = T) # See what this function does?\n",
+    "sample(x = c(\"H\", \"T\"), size = 4, replace = T) # See what this function does?\n",
+    "\n",
+    "# Try again - just to see that the set.seed() actually works\n",
+    "\n",
+    "set.seed(1)\n",
+    "sample(x = c(\"H\", \"T\"), size = 4, replace = T)\n",
+    "sample(x = c(\"H\", \"T\"), size = 4, replace = T)\n",
+    "sample(x = c(\"H\", \"T\"), size = 4, replace = T)\n",
+    "\n",
+    "paste(sample(x = c(\"H\", \"T\"), size = 4, replace = T), collapse = \"\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Make a coin flipping function in R"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "language": "R"
+   },
+   "source": [
+    "flip_coin <- function(n) {\n",
+    "    flip <- sample(x = c(\"H\", \"T\"), size = n, replace = T)\n",
+    "    toss <- paste(flip, collapse = \"\")\n",
+    "    return(toss)\n",
+    "}\n",
+    "\n",
+    "set.seed(1)\n",
+    "flip_coin(1)\n",
+    "flip_coin(4)\n",
+    "flip_coin(4)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Now we will flip a coin 4 times and do it 1 million times"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "language": "R"
+   },
+   "source": [
+    "set.seed(0)\n",
+    "y <- rep(NA, 1000000) # We output to a vector - for speed (Remember that it is super fast to write to a vector!!?)\n",
+    "\n",
+    "for (i in 1:1000000) {\n",
+    "    y[i] <- flip_coin(4)\n",
+    "    if (i %% 10000 == 0) { # A \"progress\" bar - print a \".\" for every 10000 calls\n",
+    "        cat(\".\")\n",
+    "        flush.console()\n",
+    "    }\n",
+    "}\n",
+    "\n",
+    "pd <- tibble(tosses = y) # convert output to a data frame\n",
+    "rm(i, y)\n",
+    "\n",
+    "sum(pd$tosses == \"HTHT\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Q1.1: What is my brute force estimate of the probability of getting TTTT with a coin using 1 million simulations?"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "language": "R"
+   },
+   "source": [
+    "sum(pd$tosses == \"TTTT\") / 1000000"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "---\n",
+    "\n",
+    "## Q1.2: Does it look like that all combinations of four throws have the same probability?\n",
+    "\n",
+    "I.e. does TTTT have the same probability as THTH...\n",
+    "\n",
+    "You can use a plot or calculations to answer this."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "language": "R"
+   },
+   "source": [
+    "# Create a table of the frequencies of each combination\n",
+    "freq_table <- table(pd$tosses)\n",
+    "\n",
+    "# Print the table\n",
+    "freq_table\n",
+    "\n",
+    "# Create a bar plot of the frequencies\n",
+    "barplot(freq_table, main = \"Frequencies of Four Coin Tosses\", xlab = \"Toss Combination\", ylab = \"Frequency\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "---\n",
+    "\n",
+    "# Book exercises (Analysis of biological data)\n",
+    "\n",
+    "## Solve in R the following book exercise as a check\n",
+    "\n",
+    "Do the following practice problems in Chapter 5 to check your knowledge of the simple rules in probability (these will be discussed only briefly in class):\n",
+    "\n",
+    "* 1 and 2 (addition and total probability rule) (Brussel sprouts)\n",
+    "* 12 (Five researchers take a random sample)\n",
+    "* 14 (HIV tests)\n",
+    "* 17 (Handwashing)\n",
+    "\n",
+    "## NOTE: We ask you to write your answers here in your rmarkdown!!!\n",
+    "\n",
+    "When you do that, small calculations can easily be included together with your text/notes."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Using R to calculate and simulate from known probability distributions\n",
+    "\n",
+    "During the course we are going to \"meet\" a number of theoretical probability distributions, there arise in the context of specific types of data and specific random trials that we imagine are \"behind\" the data: the 4 distributions we are going to meet in the coming chapters are :\n",
+    "\n",
+    " * the binomial distribution (chapter 6 and 7 in the ABD book)\n",
+    " * the Poisson and the chi.square distribution (in chapter 8 )\n",
+    " * the infamous \"normal\" or Gaussian distribution (chapters 10, 11 and 12)\n",
+    " \n",
+    "R is pretty effective at drawing random number and calculating the probability of specific events with these distributions.\n",
+    "\n",
+    "So in order to make you comfortable about sampling and the different distributions you we are kindly asking you try it..."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Simulating random numbers from your own distribution / theoretical distributions\n",
+    "\n",
+    "Hint:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "language": "R"
+   },
+   "source": [
+    "(pd <- tibble(x = 1:100))\n",
+    "\n",
+    "set.seed(1)\n",
+    "(pd <- tibble(x = sample(c(\"Palle\", \"Thomas\"), size = 10, replace = TRUE, prob = c(0.8, 0.2))))\n",
+    "\n",
+    "set.seed(2)\n",
+    "(pd <- tibble(x = sample(c(\"Palle\", \"Thomas\"), size = 10, replace = TRUE, prob = c(0.8, 0.2))))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Your task:\n",
+    "\n",
+    "Use R functions to make a tibble/data frame with a column full of your random numbers.\n",
+    "\n",
+    "Also, make a plot that shows the distribution of your random numbers.\n",
+    "\n",
+    "The random numbers should come from:"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Q2.1: A normal distribution with mean 1000 and SD 200\n",
+    "\n",
+    "Hint: https://www.google.com/search?q=R+simulate+normal+distribution\n",
+    "\n",
+    "Or.. chatGPT or similar? Try it!"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "language": "R"
+   },
+   "source": [
+    "pd <- tibble(x = rnorm(1000, mean = 1000, sd = 200))\n",
+    "pd %>% ggplot(aes(x = x)) +\n",
+    "    geom_histogram(bins = 100)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "---\n",
+    "\n",
+    "### Q2.2: A uniform distribution with minimum 10 and maximum 200"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "language": "R"
+   },
+   "source": [
+    "pd <- tibble(x = runif(1000, min = 10, max = 200))\n",
+    "pd %>% ggplot(aes(x = x)) +\n",
+    "    geom_histogram(bins = 100)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "---\n",
+    "\n",
+    "### Q2.3: A chi square distribution with 1 degrees of freedom"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "language": "R"
+   },
+   "source": [
+    "pd <- tibble(x = rchisq(1000, df = 1))\n",
+    "pd %>% ggplot(aes(x = x)) +\n",
+    "    geom_histogram(bins = 100)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Q2.4: How big a proportion of your random chi-square values are > 3.84?\n",
+    "\n",
+    "(If you had a stats course you may remember this critical value of 3.84)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "language": "R"
+   },
+   "source": [
+    "sum(pd$x > 3.84) / 1000"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "---\n",
+    "\n",
+    "### Q2.5: The empirical distribution of gene length in humans. (The dataset is included)\n",
+    "\n",
+    "So we ask you to sample 100 genes (and their lengths) with replacement.\n",
+    "\n",
+    "And create a data frame with a column holding the gene lengths as well as visualize the distribution."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "language": "R"
+   },
+   "source": [
+    "df <- read_csv(file = r\"(D:\\repos\\DSIB\\exercises\\wk3\\chap04e1HumanGeneLengthsLongestTranscript - Copy.csv)\""
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "language": "R"
+   },
+   "source": [
+    "df2 <- slice_sample(df, n = 100, replace = TRUE)\n",
+    "\n",
+    "ggplot(df2, aes(x = size)) +\n",
+    "    geom_histogram(bins = 30)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "---\n",
+    "\n",
+    "### Q2.6: Plot the distribution of all the genes. Do you expect the mean or median gene length to be the largest? Why? Check it!"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "language": "R"
+   },
+   "source": [
+    "ggplot(df, aes(x = size)) +\n",
+    "    geom_histogram(bins = 30)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "language": "R"
+   },
+   "source": [
+    "summarise(df, mean = mean(size), median = median(size))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "---\n",
+    "\n",
+    "# Sampling a NULL distribution from your genes\n",
+    "\n",
+    "I have found 56 highly expressed genes with a median length of 3654 - which is longer than the median length of all the genes.\n",
+    "\n",
+    "Now, try and make many samples of 56 genes and calculate many median lengths.\n",
+    "\n",
+    "## Q3.1: How big a proportion of your samples had a median length >= 3654?\n",
+    "\n",
+    "REMEBER THE LECTURE LAST WEEK!! R Speed!!!"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "language": "R"
+   },
+   "source": [
+    "# Set the number of samples to generate\n",
+    "n_samples <- 1000\n",
+    "\n",
+    "# Create an empty vector to store the median lengths\n",
+    "med_lengths <- numeric(n_samples)\n",
+    "\n",
+    "# Generate samples and calculate median lengths\n",
+    "for (i in 1:n_samples) {\n",
+    "    sample_genes <- slice_sample(df, n = 56, replace = TRUE)\n",
+    "    med_lengths[i] <- median(sample_genes$size)\n",
+    "}\n",
+    "\n",
+    "# Calculate the proportion of samples with median length >= 3654\n",
+    "summarise(tibble(med_lengths), prop = sum(med_lengths >= 3654) / n_samples)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "---\n",
+    "\n",
+    "Congratulations - you have just calculated a one-sided p-value!\n",
+    "\n",
+    "(You just tested if your 56 genes had a significantly longer median length than all genes.)\n",
+    "\n",
+    "## Sampling dices\n",
+    "\n",
+    "Now we want you to use your knowledge so far to simulate different kind of dices, throw the dice many times and show us that your simulation works!\n",
+    "\n",
+    "\"Many\" is normally at least 10.000...\n",
+    "\n",
+    "## Q3.2: A fair 6-sided dice\n",
+    "\n",
+    "Hint:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "language": "R"
+   },
+   "source": [
+    "sample(x = 1:4, size = 10, replace = TRUE)"
+   ]
+  },
+  {
+   "cell
